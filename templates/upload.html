@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}上传数据 · 学生综测成绩分析系统{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>上传成绩单</h1>
+        <p>支持 .xlsx / .xls / .csv，系统会自动识别学号、姓名、科目与综测列</p>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-head"><h2>选择文件</h2><span class="hint">最大 32MB</span></div>
+
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+            <label class="dropzone" id="dropzone" for="file-input">
+                <div class="dz-icon">📥</div>
+                <h3>点击选择，或把文件拖到这里</h3>
+                <p>首行需为表头，包含「学号」「姓名」列，最后一列建议为「综测」</p>
+                <div class="dz-file" id="dz-file"></div>
+            </label>
+            <input type="file" id="file-input" name="file" accept=".xlsx,.xls,.csv" hidden>
+
+            <div class="radio-row">
+                <label><input type="radio" name="mode" value="replace" checked>覆盖导入（清空原有数据）</label>
+                <label><input type="radio" name="mode" value="append">追加导入（保留原有数据）</label>
+            </div>
+
+            <button class="btn" type="submit">开始导入</button>
+        </form>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card-head"><h2>当前数据</h2></div>
+            <div class="chips">
+                <span class="chip">👥 学生 <b>{{ student_total }}</b> 人</span>
+                <span class="chip">📄 来源 <b>{{ source or '—' }}</b></span>
+                <span class="chip">🕒 更新 <b>{{ updated_at or '—' }}</b></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h2>导入步骤</h2></div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-no">1</div>
+                    <div><b>准备 Excel</b><span>第一行为表头，包含学号、姓名与各科成绩</span></div>
+                </div>
+                <div class="step">
+                    <div class="step-no">2</div>
+                    <div><b>上传文件</b><span>选择覆盖或追加模式后提交</span></div>
+                </div>
+                <div class="step">
+                    <div class="step-no">3</div>
+                    <div><b>查看分析</b><span>回到数据总览查看图表与排名</span></div>
+                </div>
+            </div>
+        </div>
+
+        {% if student_total %}
+        <div class="card">
+            <div class="card-head"><h2>危险操作</h2></div>
+            <p class="hint" style="margin-bottom:12px">清空后所有学生成绩将从数据库中删除，且无法恢复。</p>
+            <form method="post" action="{{ url_for('clear_data') }}"
+                  onsubmit="return confirm('确定要清空全部成绩数据吗？此操作不可恢复。');">
+                <button class="btn danger small" type="submit">清空全部数据</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const input = document.getElementById("file-input");
+    const dropzone = document.getElementById("dropzone");
+    const label = document.getElementById("dz-file");
+    const form = document.getElementById("upload-form");
+
+    function showName() {
+        const file = input.files[0];
+        label.textContent = file ? "已选择：" + file.name : "";
+    }
+    input.addEventListener("change", showName);
+
+    ["dragenter", "dragover"].forEach(evt =>
+        dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add("dragover"); }));
+    ["dragleave", "drop"].forEach(evt =>
+        dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove("dragover"); }));
+    dropzone.addEventListener("drop", e => {
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            showName();
+        }
+    });
+
+    form.addEventListener("submit", e => {
+        if (!input.files.length) {
+            e.preventDefault();
+            alert("请先选择要上传的成绩文件");
+        }
+    });
+})();
+</script>
+{% endblock %}

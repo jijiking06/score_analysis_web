@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}数据总览 · 学生综测成绩分析系统{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>数据总览</h1>
+        <p>
+            {% if dash.source %}数据来源：{{ dash.source }}{% else %}尚未导入数据{% endif %}
+            {% if dash.updated_at %} · 更新于 {{ dash.updated_at }}{% endif %}
+        </p>
+    </div>
+    <div class="nav-tools">
+        <a class="btn small" href="{{ url_for('upload') }}">＋ 导入成绩</a>
+    </div>
+</div>
+
+{% if not dash.has_data %}
+    <div class="card">
+        <div class="empty">
+            <div class="empty-icon">📭</div>
+            <h3>还没有成绩数据</h3>
+            <p>上传一份 Excel / CSV 成绩单，系统会自动生成统计分析与图表。</p>
+            <p style="margin-top:16px">
+                <a class="btn" href="{{ url_for('upload') }}">立即上传成绩单</a>
+            </p>
+        </div>
+    </div>
+{% else %}
+
+    <section class="kpi-grid">
+        <div class="kpi" style="--accent:#4f46e5">
+            <div class="kpi-top"><span class="kpi-icon">👥</span>学生总数</div>
+            <div class="kpi-value">{{ dash.count }}<small>人</small></div>
+            <div class="kpi-sub">课程 {{ dash.subject_count }} 门</div>
+        </div>
+        <div class="kpi" style="--accent:#0ea5e9">
+            <div class="kpi-top"><span class="kpi-icon">📈</span>综测平均分</div>
+            <div class="kpi-value">{{ dash.avg }}</div>
+            <div class="kpi-sub">中位数 {{ dash.median }} · 标准差 {{ dash.std }}</div>
+        </div>
+        <div class="kpi" style="--accent:#16a34a">
+            <div class="kpi-top"><span class="kpi-icon">🏆</span>最高分</div>
+            <div class="kpi-value">{{ dash.max }}</div>
+            <div class="kpi-sub">最低分 {{ dash.min }}</div>
+        </div>
+        <div class="kpi" style="--accent:#f59e0b">
+            <div class="kpi-top"><span class="kpi-icon">✅</span>及格率</div>
+            <div class="kpi-value">{{ dash.pass_rate }}<small>%</small></div>
+            <div class="kpi-sub">≥ {{ dash.pass_line }} 分</div>
+        </div>
+        <div class="kpi" style="--accent:#a855f7">
+            <div class="kpi-top"><span class="kpi-icon">⭐</span>优秀率</div>
+            <div class="kpi-value">{{ dash.excellent_rate }}<small>%</small></div>
+            <div class="kpi-sub">≥ {{ dash.excellent_line }} 分</div>
+        </div>
+    </section>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-head">
+                <h2>综测分数段占比</h2>
+                <span class="hint">按等级划分</span>
+            </div>
+            <div id="chart-pie" class="chart"></div>
+        </div>
+        <div class="card">
+            <div class="card-head">
+                <h2>综测成绩分布</h2>
+                <span class="hint">10 分一档</span>
+            </div>
+            <div id="chart-hist" class="chart"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>综测排名前十</h2>
+            <span class="hint">点击柱子或表格可查看学生详情</span>
+        </div>
+        <div id="chart-top" class="chart tall"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>各科目平均分</h2>
+            <span class="hint">按平均分升序 · 可横向缩放</span>
+        </div>
+        <div id="chart-subject" class="chart tall"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>综测成绩总表</h2>
+            <input id="table-search" class="input" style="max-width:260px;flex:0 1 260px"
+                   type="search" placeholder="搜索姓名 / 学号">
+        </div>
+        <div class="table-wrap tall">
+            <table id="rank-table">
+                <thead>
+                    <tr>
+                        <th class="center" style="width:80px">排名</th>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th class="num">综测分数</th>
+                        <th class="center">等级</th>
+                        <th class="center">操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="card-head" style="margin:14px 0 0">
+            <span class="hint" id="table-info"></span>
+            <span class="nav-tools">
+                <button class="btn ghost small" id="page-prev" type="button">上一页</button>
+                <button class="btn ghost small" id="page-next" type="button">下一页</button>
+            </span>
+        </div>
+    </div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if dash.has_data %}
+<script id="dash-data" type="application/json">{{ dash | tojson }}</script>
+<script src="{{ url_for('static', filename='vendor/echarts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endif %}
+{% endblock %}

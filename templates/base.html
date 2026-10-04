@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}学生综测成绩分析系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="{{ url_for('index') }}">
+                <span class="brand-logo">📊</span>
+                <span class="brand-text">学生综测成绩分析系统</span>
+            </a>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}"
+                   class="{{ 'active' if request.endpoint == 'index' }}">数据总览</a>
+                <a href="{{ url_for('search') }}"
+                   class="{{ 'active' if request.endpoint in ('search', 'student_detail') }}">学生查询</a>
+                <a href="{{ url_for('upload') }}"
+                   class="{{ 'active' if request.endpoint == 'upload' }}">上传数据</a>
+            </nav>
+            <div class="nav-tools">
+                <a class="btn ghost small" href="{{ url_for('export_csv') }}">⬇ 导出 CSV</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="toasts">
+                    {% for category, message in messages %}
+                        <div class="toast toast-{{ category or 'info' }}">
+                            <span>{{ '✅' if category == 'success' else '⚠️' }}</span>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        学生综测成绩分析系统 · Flask + SQLite + ECharts
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

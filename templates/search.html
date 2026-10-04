@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}学生查询 · 学生综测成绩分析系统{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>学生成绩查询</h1>
+        <p>输入姓名或学号，查看该学生的综测排名与各科成绩详情</p>
+    </div>
+</div>
+
+<div class="card">
+    <form class="search-bar" method="get" action="{{ url_for('search') }}">
+        <input class="input" type="search" name="kw" value="{{ keyword }}"
+               placeholder="输入姓名或学号，例如：张三 / 20245101303" autofocus>
+        <button class="btn" type="submit">🔍 查询</button>
+    </form>
+</div>
+
+{% if searched %}
+    {% if results %}
+        <div class="card">
+            <div class="card-head">
+                <h2>查询结果</h2>
+                <span class="hint">共 {{ results|length }} 条匹配记录</span>
+            </div>
+            {% for stu in results %}
+            <div class="result-item">
+                <div class="avatar" style="width:46px;height:46px;font-size:19px;border-radius:14px;
+                     background:linear-gradient(135deg,#eef0ff,#e0e7ff);color:#4f46e5;border:none">
+                    {{ stu.name[0] if stu.name else '?' }}
+                </div>
+                <div class="grow">
+                    <div class="who">{{ stu.name }}</div>
+                    <div class="sid">学号：{{ stu.stu_id or '—' }}</div>
+                </div>
+                <div class="chips">
+                    <span class="chip">排名 <b>#{{ stu.rank }}</b></span>
+                    <span class="chip">综测 <b>{{ '%.2f'|format(stu.zongce) if stu.zongce is not none else '—' }}</b></span>
+                    <span class="badge" style="--c:{{ stu.grade_color }}">{{ stu.grade }}</span>
+                </div>
+                <a class="btn small" href="{{ url_for('student_detail', stu_id=stu.stu_id) }}">查看详情</a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="empty">
+                <div class="empty-icon">🔍</div>
+                <h3>未找到匹配的学生</h3>
+                <p>请检查姓名或学号是否输入正确，也可以只输入姓氏或学号的一部分。</p>
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="empty">
+            <div class="empty-icon">💡</div>
+            <h3>开始查询</h3>
+            <p>支持模糊匹配：输入「张」可以查到所有姓张的同学。</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

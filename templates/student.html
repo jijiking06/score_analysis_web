@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% set stu = view.student %}
+{% block title %}{{ stu.name }} 的成绩 · 学生综测成绩分析系统{% endblock %}
+
+{% block content %}
+<div class="profile">
+    <div class="avatar">{{ stu.name[0] if stu.name else '?' }}</div>
+    <div>
+        <h1>{{ stu.name }}</h1>
+        <div class="meta">学号：{{ stu.stu_id or '—' }} · 共 {{ view.class_size }} 名学生参与统计</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="profile-stats">
+        <div class="profile-stat">
+            <b>{{ '%.2f'|format(stu.zongce) if stu.zongce is not none else '—' }}</b>
+            <span>综测总分</span>
+        </div>
+        <div class="profile-stat">
+            <b>#{{ stu.rank }}</b>
+            <span>班级排名</span>
+        </div>
+        <div class="profile-stat">
+            <b>{{ view.percentile }}%</b>
+            <span>超过同学</span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="chips">
+        <span class="chip">等级 <span class="badge" style="--c:{{ stu.grade_color }}">{{ stu.grade }}</span></span>
+        <span class="chip">班级平均 <b>{{ view.class_avg if view.class_avg is not none else '—' }}</b></span>
+        <span class="chip">高于班级平均 <b>{{ view.above_avg_count }}/{{ view.compared_count }}</b> 门</span>
+        {% if view.best %}<span class="chip">🏅 最强科目 <b>{{ view.best.subject }}</b>（{{ view.best.score }}）</span>{% endif %}
+        {% if view.worst %}<span class="chip">📌 最弱科目 <b>{{ view.worst.subject }}</b>（{{ view.worst.score }}）</span>{% endif %}
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-head"><h2>核心科目雷达图</h2><span class="hint">对比班级平均</span></div>
+        <div id="chart-radar" class="chart"></div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h2>各科成绩 vs 班级平均</h2><span class="hint">可横向缩放</span></div>
+        <div id="chart-compare" class="chart"></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head">
+        <h2>单科成绩明细</h2>
+        <span class="hint">共 {{ view.subject_rows|length }} 门课程</span>
+    </div>
+    <div class="table-wrap tall">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:52px" class="center">序号</th>
+                    <th>课程</th>
+                    <th class="num">本人成绩</th>
+                    <th class="num">班级平均</th>
+                    <th class="num">与平均差</th>
+                    <th class="center">等级</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in view.subject_rows %}
+                <tr>
+                    <td class="center rank-cell">{{ loop.index }}</td>
+                    <td>{{ row.subject }}</td>
+                    <td class="num score-pill">{{ row.score }}</td>
+                    <td class="num">{{ row.class_avg if row.class_avg is not none else '—' }}</td>
+                    <td class="num">
+                        {% if row.diff is none %}
+                            <span class="diff-flat">—</span>
+                        {% elif row.diff > 0 %}
+                            <span class="diff-up">▲ {{ row.diff }}</span>
+                        {% elif row.diff < 0 %}
+                            <span class="diff-down">▼ {{ row.diff }}</span>
+                        {% else %}
+                            <span class="diff-flat">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="center"><span class="badge" style="--c:{{ '#22c55e' if row.grade == '优秀' else '#3b82f6' if row.grade == '良好' else '#f59e0b' if row.grade == '中等' else '#a855f7' if row.grade == '及格' else '#ef4444' }}">{{ row.grade }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if stu.extra %}
+<div class="card">
+    <div class="card-head"><h2>其他指标</h2><span class="hint">来自成绩单的附加列</span></div>
+    <div class="chips">
+        {% for key, value in stu.extra.items() %}
+        <span class="chip">{{ key }} <b>{{ value }}</b></span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card" style="display:flex;gap:10px">
+    <a class="btn ghost" href="{{ url_for('search') }}">← 返回查询</a>
+    <a class="btn ghost" href="{{ url_for('index') }}">数据总览</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="student-data" type="application/json">{{ view | tojson }}</script>
+<script src="{{ url_for('static', filename='vendor/echarts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}
