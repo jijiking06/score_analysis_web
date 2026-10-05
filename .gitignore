@@ -1,0 +1,25 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- 本地数据库（含真实学生姓名/学号，切勿提交）----
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- 上传的成绩单原始文件 ----
+uploads/
+
+# ---- 编辑器 / 操作系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- 日志与临时文件 ----
+*.log
+*.tmp
